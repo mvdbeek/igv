@@ -9,10 +9,9 @@
 #Script must be in the same directory as igv.jar
 #Add the flag -Ddevelopment = true to use features still in development
 prefix=`dirname $(readlink $0 || echo $0)`
-exec java -Xmx4000m \
-     -XX:+IgnoreUnrecognizedVMOptions \
-     --illegal-access=permit --add-modules=java.xml.bind \
+exec java --module-path="$prefix"/lib -Xmx4000m \
+    @igv.args \
     -Xdock:name="IGV" \
 	-Dapple.laf.useScreenMenuBar=true \
 	-Djava.net.preferIPv4Stack=true \
-	-jar "$prefix"/igv.jar "$@"
+	--module org.broad.igv/org.broad.igv.ui.Main "$@"

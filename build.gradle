@@ -21,8 +21,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 apply plugin: 'java'
-apply plugin: 'application'
 import org.apache.tools.ant.filters.ReplaceTokens
+
+ext.moduleName = 'org.broad.igv'
+ext.mainClassName = 'org.broad.igv.ui.Main'
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java', 'src/main/java9']
+        }
+    }
+}
 
 dependencies {
     compile fileTree(dir: 'lib', include: '*.jar')
@@ -33,11 +43,74 @@ task wrapper(type: Wrapper) {
     gradleVersion = '4.4.1'
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 1.9
+targetCompatibility = 1.9
 
-// Define the main class for the application
-mainClassName = 'org.broad.igv.ui.Main'
+processResources {
+    // Set the current timestamp for release builds; pass in a blank property to enable (i.e. -Ptimestamp="" at CLI)
+    if (timestamp.equals("")) { timestamp = new Date().format("MM/dd/yyyy hh:mm aa") }
+
+    filesMatching('resources/about.properties') {
+        filter (ReplaceTokens,
+                tokens: [ VERSION: version, BUILD: buildNumber, DEFAULT_MASTER_RESOURCE_URL: dataServerUrl,
+                          TIMESTAMP: timestamp, DEVELOPMENT: development ])
+    }
+
+    from("src/main/resources-jlfgr-1_0") exclude "LICENSE", "META-INF"
+}
+
+compileJava {
+    inputs.property("moduleName", moduleName)
+    doFirst {
+        options.compilerArgs = [
+            '--module-path', classpath.asPath,
+        ]
+        classpath = files()
+    }
+}
+
+compileTestJava {
+    inputs.property("moduleName", moduleName)
+    doFirst {
+        options.compilerArgs = [
+            '--module-path',  classpath.asPath, 
+            '--add-modules', 'junit',
+            '--add-modules', 'fest.swing',
+            '--patch-module', "$moduleName=" + files(sourceSets.test.java.srcDirs).asPath, 
+        ]
+        classpath = files()
+    }
+}
+
+tasks.withType(Test) {
+    systemProperties = System.getProperties()
+    systemProperties['java.awt.headless'] = 'true'
+    systemProperties['make.fail'] = 'false'
+    systemProperties['include.longrunning'] = 'false'
+    systemProperties['ignore.ioexceptions'] = 'false'
+    maxHeapSize = '2000m'
+    forkEvery = 1
+}
+
+test {
+    inputs.property("moduleName", moduleName)
+    doFirst {
+        jvmArgs = [
+            '--module-path',  classpath.asPath, 
+            '--add-modules', 'junit', 
+            '--add-modules', 'fest.swing', 
+            '--add-modules', 'java.xml.bind', 
+            '--add-modules', 'ALL-MODULE-PATH',
+            '--add-reads', "$moduleName=junit", 
+            '--add-reads', "$moduleName=fest.swing",
+            '--add-exports', "$moduleName/org.broad.igv.preprocess=junit",
+            '--add-exports', "$moduleName/org.broad.tribble=junit",
+            '--add-exports', "$moduleName/util=junit",
+            '--patch-module', "$moduleName=" + files(sourceSets.test.java.outputDir, sourceSets.main.output.resourcesDir).asPath, 
+        ]
+        classpath = files()
+    }
+}
 
 jar {
     manifest {
@@ -51,24 +124,35 @@ jar {
     }
 }
 
-processResources {
-    // Set the current timestamp for release builds; pass in a blank property to enable (i.e. -Ptimestamp="" at CLI)
-    if (timestamp.equals("")) { timestamp = new Date().format("MM/dd/yyyy hh:mm aa") }
+def classpathContent = copySpec {
+    from ('lib') {
+        include '*.jar'
+    }
+    into "lib"
+}
 
-    filesMatching('resources/about.properties') {
-        filter (ReplaceTokens,
-                tokens: [ VERSION: version, BUILD: buildNumber, DEFAULT_MASTER_RESOURCE_URL: dataServerUrl,
-                          TIMESTAMP: timestamp, DEVELOPMENT: development ])
+task createDist(type: Copy, dependsOn: jar)  {
+    from ('scripts') {
+        include 'igv.bat'
+        include 'igv.command'
+        include 'igv.sh'
+        include 'igv.args'
+    }
+    
+    with classpathContent
+
+    into "${buildDir}/dist"
+}
+
+task createDistZip(type: Zip, dependsOn: createDist) {
+    destinationDir = file("${buildDir}/distZip")
+    baseName = "IGV"
+    from "${buildDir}/dist"
+    into createDistZip.baseName + "_${version}"
+
+    doLast {
+        project.exec { commandLine('chmod', '775', createDistZip.archivePath ) }
     }
 }
 
-tasks.withType(Test) {
-    systemProperties = System.getProperties()
-    systemProperties['java.awt.headless'] = 'true'
-    systemProperties['make.fail'] = 'false'
-    systemProperties['include.longrunning'] = 'false'
-    systemProperties['ignore.ioexceptions'] = 'false'
-    maxHeapSize = '2000m'
-    jvmArgs '-javaagent:test/lib/JavaAgent.jar'
-    forkEvery = 1
-}
+build.dependsOn createDistZip
