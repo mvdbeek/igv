@@ -34,7 +34,11 @@ import org.broad.igv.cli_plugin.PluginSpecReader;
 import org.broad.igv.cli_plugin.ui.RunPlugin;
 import org.broad.igv.cli_plugin.ui.SetPluginPathDialog;
 import org.broad.igv.dev.db.DBProfileEditor;
+import org.broad.igv.event.GenomeChangeEvent;
+import org.broad.igv.event.IGVEventBus;
+import org.broad.igv.event.IGVEventObserver;
 import org.broad.igv.feature.genome.GenomeManager;
+import org.broad.igv.feature.genome.RemoveGenomesDialog;
 import org.broad.igv.ga4gh.Ga4ghAPIHelper;
 import org.broad.igv.ga4gh.OAuthUtils;
 import org.broad.igv.gs.GSOpenSessionMenuAction;
@@ -46,10 +50,6 @@ import org.broad.igv.tools.IgvToolsGui;
 import org.broad.igv.tools.motiffinder.MotifFinderPlugin;
 import org.broad.igv.track.CombinedDataSourceDialog;
 import org.broad.igv.ui.action.*;
-import org.broad.igv.event.GenomeChangeEvent;
-import org.broad.igv.event.IGVEventBus;
-import org.broad.igv.event.IGVEventObserver;
-import org.broad.igv.feature.genome.RemoveGenomesDialog;
 import org.broad.igv.ui.commandbar.GenomeComboBox;
 import org.broad.igv.ui.legend.LegendDialog;
 import org.broad.igv.ui.panel.FrameManager;
@@ -161,8 +161,8 @@ public class IGVMenuBar extends JMenuBar implements IGVEventObserver {
         //This is for Macs, so showing the about dialog
         //from the command bar does what we want.
         if (Globals.IS_MAC) {
-            OSXIntegration.setAboutHandler(this);
-            OSXIntegration.setQuitHandler();
+            DesktopIntegration.setAboutHandler(this);
+            DesktopIntegration.setQuitHandler();
         }
     }
 
