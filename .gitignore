@@ -8,4 +8,5 @@ igv.log
 /.gradle
 .project
 .classpath
+/.idea
 /.settings
