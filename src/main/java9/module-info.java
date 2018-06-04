@@ -94,6 +94,7 @@ module org.broad.igv {
     opens org.broad.igv.cli_plugin to java.xml.bind;
     opens org.broad.igv.data to java.xml.bind;
     opens org.broad.igv.dev.db to java.xml.bind;
+    opens org.broad.igv.feature.basepair to java.xml.bind;
     opens org.broad.igv.gwas to java.xml.bind;
     opens org.broad.igv.renderer to java.xml.bind;
     opens org.broad.igv.sam to java.xml.bind;
