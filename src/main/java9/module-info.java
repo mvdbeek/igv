@@ -104,10 +104,10 @@ module org.broad.igv {
     
     requires AbsoluteLayout;
     requires ant;
+    requires com.google.common;
     requires commons.io;
     requires commons.math;
     requires goby.io.igv;
-    requires com.google.common;
     requires gson;
     requires htsjdk;
     requires jargs;
@@ -124,12 +124,12 @@ module org.broad.igv {
     requires javafx.fxml;
     requires javafx.graphics;
     requires javafx.swing;
+    requires jdk.xml.dom;
     requires jfreechart;
     requires jgrapht;
     requires log4j;
     requires mongo.java.driver;
     requires na12878kb.utils;
-//    requires log4j.api;
     requires org.apache.logging.log4j;
     requires org.apache.logging.log4j.core;
     requires swing.layout;

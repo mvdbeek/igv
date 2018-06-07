@@ -65,6 +65,7 @@ processResources {
 }
 
 jar {
+    archiveName = 'igv.jar'
     manifest {
         attributes(
             "Permissions": "all-permissions",
@@ -93,9 +94,12 @@ task createDist(type: Copy, dependsOn: jar)  {
         include 'igv.sh'
     }
     from ("${buildDir}/libs") {
-        include '*.jar'
+        include 'igv*.jar'
     }
     from ("lib") {
+        include '*.jar'
+    }
+    from ("lib_java8") {
         include '*.jar'
     }
 
